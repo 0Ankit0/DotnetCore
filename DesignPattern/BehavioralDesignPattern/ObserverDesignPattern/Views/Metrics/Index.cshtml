@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Real-Time Metrics with Time-Only on X-Axis";
+}
+
+<h1>Real-Time Metrics Dashboard</h1>
+
+<div class="chart-container">
+    <canvas id="metricsChart" width="800" height="400"></canvas>
+</div>
+
+<!-- SignalR Client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // 1. Build a connection to your SignalR hub
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/metricsHub")  // adjust to match your server route
+        .build();
+
+    // 2. Prepare Chart.js configuration
+    const ctx = document.getElementById('metricsChart').getContext('2d');
+
+    // We'll store up to, say, 20 data points on the chart
+    let chartData = {
+        labels: [],         // these will be time-only strings
+        datasets: [{
+            label: 'CPU Usage (%)',
+            data: [],
+            borderColor: 'rgba(75, 192, 192, 1)', 
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1
+        }]
+    };
+
+    const config = {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    // If you want Chart.js to treat the X-axis as a linear index of points,
+                    // leave it as type: 'category' (default). 
+                    // If you want to handle actual Date objects (e.g., for more advanced 
+                    // formatting or uniform spacing of times), you can set type: 'time' 
+                    // (requires parsing the data points differently).
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    };
+
+    // Create the chart instance
+    const metricsChart = new Chart(ctx, config);
+
+    // 3. Define a function to update the chart with new data
+    function addMetricsData(cpuUsage, timestamp) {
+        // Convert the timestamp to a local time string (e.g. "10:34:22 AM")
+        let timeLabel = new Date(timestamp).toLocaleTimeString();
+
+        // Push the new label (time-only) and new CPU usage value
+        chartData.labels.push(timeLabel);
+        chartData.datasets[0].data.push(cpuUsage);
+
+        // Keep only the last 20 data points
+        if (chartData.labels.length > 20) {
+            chartData.labels.shift();
+            chartData.datasets[0].data.shift();
+        }
+
+        // Update the chart
+        metricsChart.update();
+    }
+
+    // 4. Handle real-time data from the hub
+    connection.on("ReceiveMetrics", (data) => {
+        // "data" might look like:
+        // { cpuUsagePercentage: 45.3, timestamp: "2024-12-22T05:31:00Z" }
+        let cpuUsage = data.cpuUsagePercentage;
+        let timestamp = data.timestamp;
+
+        // Update the chart with time-only label
+        addMetricsData(cpuUsage, timestamp);
+    });
+
+    // 5. Start the SignalR connection
+    connection.start()
+        .then(() => console.log("Connected to SignalR hub. Waiting for metrics..."))
+        .catch(err => console.error(err));
+</script>

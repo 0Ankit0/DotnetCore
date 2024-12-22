@@ -1,0 +1,256 @@
+﻿@{
+    ViewData["Title"] = "Observer Design Pattern";
+}
+@section Styles {
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            background-color: #3498db;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        .example, .explanation {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .code {
+            background-color: #2d2d2d;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: "Courier New", monospace;
+            overflow-x: auto;
+        }
+
+        .code pre {
+            margin: 0;
+        }
+
+        .real-life {
+            margin-top: 30px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+        }
+
+        .real-life h3 {
+            margin-top: 0;
+        }
+
+        .list-item {
+            margin-bottom: 10px;
+        }
+
+        .callout {
+            background-color: #eaf3fc;
+            padding: 10px;
+            border-left: 4px solid #3498db;
+            margin-top: 20px;
+        }
+    </style>
+}
+
+<h1>Observer Design Pattern Explained</h1>
+
+<div class="section">
+    <h2>What the Observer Design Pattern Does</h2>
+    <p>
+        The <strong>Observer Design Pattern</strong> defines a one-to-many dependency between objects so that when one object (the <em>subject</em>) changes state, all its dependents (the <em>observers</em>) are automatically notified and updated.
+    </p>
+</div>
+
+<div class="section">
+    <h2>Problem it Solves</h2>
+    <ul>
+        <li class="list-item"><strong>Scattered Update Logic</strong>: Without a structured way to notify interested parties, update logic might be repeated in multiple places.</li>
+        <li class="list-item"><strong>Tight Coupling</strong>: Directly calling update methods on dependent objects couples the subject to its observers, making changes more difficult.</li>
+        <li class="list-item"><strong>Notification Complexity</strong>: Managing who to notify and when can become complex if each observer must be tracked manually.</li>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>How It Works</h2>
+    <p>
+        In the Observer Pattern, there is a <strong>Subject</strong> (or <em>observable</em>) that maintains a list of observers. Whenever the subject changes, it <em>notifies</em> all its observers. Observers implement a common interface or inherit a base class so the subject can inform them without needing to know the specifics of each observer.
+    </p>
+</div>
+
+<div class="section">
+    <h2>Real-life Example</h2>
+    <div class="real-life">
+        <h3>News Publisher and Subscribers</h3>
+        <p>
+            Think of a <strong>news publisher</strong> that publishes daily updates. Subscribers sign up to receive notifications. Whenever there’s a new article or update:
+        </p>
+        <ul>
+            <li class="list-item"><strong>Publisher (Subject)</strong>: Sends out the latest news.</li>
+            <li class="list-item"><strong>Subscribers (Observers)</strong>: Receive the update in their email or on their devices without needing to check the publisher constantly.</li>
+        </ul>
+        <p>
+            This decouples the publisher from knowing exactly who its subscribers are or how they consume the update. It only needs to notify them when new content is available.
+        </p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Observer Pattern in Code</h2>
+    <p>Below is a simplified example using the C# <code>IObservable</code> and <code>IObserver</code> interfaces.</p>
+
+    <div class="example">
+        <p><strong>Code Example:</strong></p>
+        <div class="code">
+            <pre>
+// Subject (Observable)
+public class TemperatureSensor : IObservable<int>
+{
+    private readonly List<IObserver<int>> _observers = new();
+    private Random _rnd = new();
+
+    public IDisposable Subscribe(IObserver<int> observer)
+    {
+        if (!_observers.Contains(observer))
+            _observers.Add(observer);
+
+        // Return an IDisposable to allow observers to unsubscribe
+        return new Unsubscriber(_observers, observer);
+    }
+
+    // This method simulates temperature readings
+    public void CheckTemperature()
+    {
+        int currentTemp = _rnd.Next(-10, 40); // in Celsius
+        NotifyObservers(currentTemp);
+    }
+
+    private void NotifyObservers(int temperature)
+    {
+        foreach (var obs in _observers)
+        {
+            obs.OnNext(temperature);
+        }
+    }
+
+    // A helper class to remove the observer from the list upon dispose
+    private class Unsubscriber : IDisposable
+    {
+        private List<IObserver<int>> _localObservers;
+        private IObserver<int> _localObserver;
+
+        public Unsubscriber(List<IObserver<int>> observers, IObserver<int> observer)
+        {
+            _localObservers = observers;
+            _localObserver = observer;
+        }
+
+        public void Dispose()
+        {
+            if (_localObservers.Contains(_localObserver))
+                _localObservers.Remove(_localObserver);
+        }
+    }
+}
+
+// Observer
+public class TemperatureDisplay : IObserver<int>
+{
+    private string _displayName;
+
+    public TemperatureDisplay(string name)
+    {
+        _displayName = name;
+    }
+
+    public void OnNext(int value)
+    {
+        Console.WriteLine($"{_displayName} received temperature update: {value}°C");
+    }
+
+    public void OnError(Exception error)
+    {
+        Console.WriteLine($"{_displayName} error: {error.Message}");
+    }
+
+    public void OnCompleted()
+    {
+        Console.WriteLine($"{_displayName} stream ended.");
+    }
+}
+
+// Example usage
+public class App
+{
+    public static void Main()
+    {
+        var sensor = new TemperatureSensor();
+
+        var display1 = new TemperatureDisplay("Lobby Display");
+        var display2 = new TemperatureDisplay("Office Display");
+
+        // Observers subscribe
+        using (sensor.Subscribe(display1))
+        using (sensor.Subscribe(display2))
+        {
+            // Check temperature a few times
+            sensor.CheckTemperature();
+            sensor.CheckTemperature();
+            sensor.CheckTemperature();
+        }
+
+        // Once out of the using scope, observers are unsubscribed
+        // Additional checks won't notify them
+        sensor.CheckTemperature();
+    }
+}
+            </pre>
+        </div>
+    </div>
+</div>
+
+<div class="section callout">
+    <h2>Benefits of the Observer Pattern</h2>
+    <ul>
+        <li class="list-item"><strong>Loose Coupling</strong>: The subject only knows it has a list of observers; it doesn’t need to know who they are or what they do.</li>
+        <li class="list-item"><strong>Scalability</strong>: Adding new observers requires minimal changes to the subject; they simply subscribe to updates.</li>
+        <li class="list-item"><strong>Maintainability</strong>: Update logic is centralized in the subject, making the code cleaner and easier to follow.</li>
+        <li class="list-item"><strong>Real-time Updates</strong>: Observers are notified as soon as changes happen.</li>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>Conclusion</h2>
+    <p>
+        The Observer Design Pattern simplifies how parts of your system stay in sync with each other.
+        By having subjects broadcast changes and observers subscribe to receive them, you ensure that
+        any interested components are always up to date without creating tight, hard-to-maintain
+        dependencies in your application.
+    </p>
+</div>
