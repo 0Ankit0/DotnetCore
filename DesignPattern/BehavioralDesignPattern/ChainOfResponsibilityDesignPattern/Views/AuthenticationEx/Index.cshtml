@@ -1,0 +1,19 @@
+﻿@using System.Security.Claims
+@{
+    ViewData["Title"] = "Home";
+}
+
+<h2>Welcome to the Secure Path</h2>
+<p><a href="auth/secure">Go to Secure Endpoint</a></p>
+@if (User.Identity?.IsAuthenticated ?? false)
+{
+    <p>Hello, @User.Identity.Name!</p>
+    <p>Your roles: @string.Join(", ", User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value))</p>
+    
+    <p><a href="/AuthenticationEx/signout">Sign Out</a></p>
+}
+else
+{
+    <p>You are not signed in.</p>
+    <p><a href="/AuthenticationEx/signin">Sign In</a></p>
+}

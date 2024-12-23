@@ -1,0 +1,29 @@
+﻿@{
+    ViewData["Title"] = "Sign In";
+}
+
+<h2>Sign In</h2>
+
+<form method="post" action="/AuthenticationEx/signin">
+    <div>
+        <label for="username">Username:</label>
+        <input class="form-control" type="text" id="username" name="username" required />
+    </div>
+    <div>
+        <label for="password">Password:</label>
+        <input class="form-control" type="password" id="password" name="password" required />
+    </div>
+    <div>
+        <button class="btn btn-success" type="submit">Sign In</button>
+    </div>
+</form>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div style="color:red;">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
+    </div>
+}
