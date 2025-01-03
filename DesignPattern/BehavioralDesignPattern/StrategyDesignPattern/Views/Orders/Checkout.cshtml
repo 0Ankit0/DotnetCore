@@ -1,0 +1,47 @@
+﻿@model StrategyDesignPattern.Models.Order
+
+@{
+    ViewBag.Title = "Checkout";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Adjust path to your layout if needed
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Checkout</h2>
+    <div class="row">
+        <div class="col-md-6">
+
+            <!-- Display basic order info -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Order Summary</h5>
+                    <p class="card-text">
+                        <strong>Order Id:</strong> @Model.Id<br />
+                        <strong>Items:</strong> @Model.ItemCount<br />
+                        <strong>Total Amount:</strong> $@Model.TotalAmount
+                    </p>
+                </div>
+            </div>
+
+            <!-- Checkout form -->
+            <form asp-action="Checkout" method="post">
+
+                <!-- Hidden fields to pass the order data -->
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ItemCount" />
+                <input type="hidden" asp-for="TotalAmount" />
+
+                <div class="mb-3">
+                    <label for="shippingOption" class="form-label">Select Shipping Method</label>
+                    <select name="shippingOption" id="shippingOption" class="form-select">
+                        <option value="Standard">Standard</option>
+                        <option value="Express">Express</option>
+                        <option value="Overnight">Overnight</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Proceed to Confirmation</button>
+            </form>
+
+        </div>
+    </div>
+</div>

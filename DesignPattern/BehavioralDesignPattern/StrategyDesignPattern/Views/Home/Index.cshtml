@@ -1,0 +1,134 @@
+﻿@{
+    ViewBag.Title = "Strategy Design Pattern";
+}
+
+<div class="container my-5">
+
+    <h1 class="text-center mb-4">Strategy Design Pattern</h1>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <p>
+                The <strong>Strategy</strong> design pattern is a behavioral software design pattern
+                that enables selecting an algorithm’s implementation at runtime.
+                It defines a family of algorithms, encapsulates each one, and makes them interchangeable.
+                Strategy lets the algorithm vary independently from clients that use it.
+            </p>
+        </div>
+    </div>
+
+    <!-- Use Cases -->
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+            <h3>Use Cases</h3>
+            <ul class="list-group mb-3">
+                <li class="list-group-item">
+                    <strong>Payment processing:</strong>
+                    Choose between different payment providers (e.g., Credit Card, PayPal, Bank Transfer).
+                </li>
+                <li class="list-group-item">
+                    <strong>Shipping calculations:</strong>
+                    Calculate shipping costs with different algorithms (Standard, Express, Overnight).
+                </li>
+                <li class="list-group-item">
+                    <strong>Logging systems:</strong>
+                    Switch between console, file, or database logging at runtime.
+                </li>
+                <li class="list-group-item">
+                    <strong>Sorting or filtering:</strong>
+                    Use different sorting algorithms (quick sort, merge sort) or filtering logic.
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Advantages -->
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h3>Advantages</h3>
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <strong>Flexibility:</strong>
+                    Easily switch strategies (algorithms) at runtime without modifying the client code.
+                </li>
+                <li class="list-group-item">
+                    <strong>Extensibility:</strong>
+                    Add new strategies without changing existing classes; just implement the same interface.
+                </li>
+                <li class="list-group-item">
+                    <strong>Maintainability:</strong>
+                    Keep related code within dedicated strategy classes, making maintenance straightforward.
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Example -->
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+            <h3>Example: Shipping Cost Calculation</h3>
+            <p>
+                Imagine an e-commerce platform needs different ways to calculate shipping costs
+                based on speed (Standard, Express, Overnight). We define an <code>IShippingStrategy</code>
+                interface and multiple concrete strategies that implement it:
+            </p>
+
+<pre class="bg-light p-3">
+<span class="text-secondary">// IShippingStrategy interface</span>
+public interface IShippingStrategy
+{
+    decimal CalculateShippingCost(Order order);
+}
+
+<span class="text-secondary">// Concrete strategies</span>
+public class StandardShippingStrategy : IShippingStrategy
+{
+    public decimal CalculateShippingCost(Order order)
+    {
+        return 5.0m + (1.0m * order.ItemCount);  <span class="text-secondary">// Example logic</span>
+    }
+}
+
+public class ExpressShippingStrategy : IShippingStrategy
+{
+    public decimal CalculateShippingCost(Order order)
+    {
+        return 12.0m + (0.5m * order.ItemCount);
+    }
+}
+
+<span class="text-secondary">// Context class (uses a strategy)</span>
+public class ShippingCostCalculator
+{
+    private readonly IShippingStrategy _strategy;
+
+    public ShippingCostCalculator(IShippingStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
+    public decimal Calculate(Order order)
+    {
+        return _strategy.CalculateShippingCost(order);
+    }
+}
+
+<span class="text-secondary">// Example usage in a controller or service</span>
+IShippingStrategy strategy = new ExpressShippingStrategy();
+var calculator = new ShippingCostCalculator(strategy);
+var cost = calculator.Calculate(new Order { ItemCount = 3 });
+Console.WriteLine($"Shipping cost: {cost}");
+</pre>
+
+            <p>
+                In this scenario, you can quickly switch from one shipping strategy to another
+                (e.g., <code>new StandardShippingStrategy()</code>,
+                <code>new ExpressShippingStrategy()</code>, etc.) without changing the
+                <code>ShippingCostCalculator</code> or <code>Order</code> class.
+                This separation of concerns highlights the power of the Strategy pattern.
+            </p>
+        </div>
+    </div>
+
+</div>
