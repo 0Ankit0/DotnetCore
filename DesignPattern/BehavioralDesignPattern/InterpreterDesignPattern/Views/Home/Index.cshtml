@@ -1,0 +1,177 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<h1>The Interpreter Pattern for a Template System</h1>
+
+<p>
+    Below is a simple explanation of how we turn a template string containing placeholders
+    into a final message by using an <strong>Interpreter</strong>-like design, along with
+    model-based property replacement.
+</p>
+
+<h2>1. The “Template” with Placeholders</h2>
+<p>
+    Suppose you have a string that contains placeholders inside <code>{{ ... }}</code> braces.
+    For example:
+</p>
+
+<pre><code>Hello {{FirstName}}, your order total is {{OrderTotal}}.</code></pre>
+
+<p>
+    These <code>{{FirstName}}</code> and <code>{{OrderTotal}}</code> bits are special “fill-in-the-blank”
+    spots we want to replace with real data from a model.
+</p>
+
+<h2>2. The “Model” with Real Data</h2>
+<p>
+    We have a model class, for example:
+</p>
+
+<pre><code class="language-csharp">
+// A class that holds actual data we want to fill in
+public class EmailModel
+{
+    public string FirstName { get; set; }
+    public decimal OrderTotal { get; set; }
+}
+</code></pre>
+
+<p>
+    When we create a new <code>EmailModel</code>, we can fill it with real data:
+</p>
+
+<pre><code class="language-csharp">
+var emailModel = new EmailModel
+{
+    FirstName = "John",
+    OrderTotal = 99.95m
+};
+</code></pre>
+
+<h2>3. Splitting the Template into Expressions</h2>
+<p>
+    The template gets parsed into separate parts:
+</p>
+<ul>
+    <li>
+        <strong>Literal Text</strong> – Normal text like
+        <em>"Hello "</em> or <em>", your order total is "</em>.
+    </li>
+    <li>
+        <strong>Placeholder</strong> – Anything inside <code>{{ }}</code> that
+        references a model property, e.g. <code>{{FirstName}}</code>.
+    </li>
+</ul>
+
+<p>
+    A parser walks through the template and splits it accordingly.
+</p>
+
+<h2>4. “Interpret” to Replace Placeholders with Model Values</h2>
+<p>
+    Each “Placeholder” asks the model for the matching property. If the placeholder is
+    <code>{{FirstName}}</code>, it retrieves <code>EmailModel.FirstName</code> (which is
+    <em>"John"</em>), and if the placeholder is
+    <code>{{OrderTotal}}</code>, it retrieves <code>EmailModel.OrderTotal</code> (which is
+    <em>99.95</em>).
+</p>
+
+<p>
+    An <strong>Interpreter</strong> or “expression” system might look like this:
+</p>
+
+<pre><code class="language-csharp">
+// IExpression: The interface for all expressions
+public interface IExpression
+{
+    string Interpret(object model);
+}
+
+// LiteralExpression: Returns its text as-is
+public class LiteralExpression : IExpression
+{
+    private readonly string _literal;
+    public LiteralExpression(string text)
+    {
+        _literal = text;
+    }
+
+    public string Interpret(object model)
+    {
+        return _literal;
+    }
+}
+
+// PlaceholderExpression: Looks up a property on the model
+public class PlaceholderExpression : IExpression
+{
+    private readonly string _propertyName;
+
+    public PlaceholderExpression(string propertyName)
+    {
+        _propertyName = propertyName;
+    }
+
+    public string Interpret(object model)
+    {
+        if (model == null) return string.Empty;
+        var propInfo = model.GetType().GetProperty(_propertyName);
+        if (propInfo == null) return string.Empty;
+
+        var value = propInfo.GetValue(model);
+        return value?.ToString() ?? string.Empty;
+    }
+}
+</code></pre>
+
+<p>
+    A <code>TemplateExpression</code> (or similar composite) collects all these expressions
+    in a list, then joins them together when you call <code>Interpret(...)</code>.
+</p>
+
+<h2>5. Getting the Final Result</h2>
+<p>
+    Once the parser has split the template into a mix of <code>LiteralExpression</code>
+    and <code>PlaceholderExpression</code> objects, we just call <code>Interpret(emailModel)</code>
+    on the combined template. For example:
+</p>
+
+<pre><code class="language-csharp">
+// Suppose our template is: "Hello {{FirstName}}, your order total is {{OrderTotal}}."
+// The parser has created expressions for each part.
+
+var expression = TemplateParser.Parse("Hello {{FirstName}}, your order total is {{OrderTotal}}.");
+
+var model = new EmailModel
+{
+    FirstName = "John",
+    OrderTotal = 99.95m
+};
+
+// Now interpret
+string result = expression.Interpret(model);
+
+// result -> "Hello John, your order total is 99.95."
+</code></pre>
+
+<h2>6. No “RouteTemplate” Required</h2>
+<p>
+    The mention of <code>RouteTemplate</code> is usually part of ASP.NET Core's
+    internal routing system. In this project, we just have our own classes
+    (<code>IExpression</code>, <code>LiteralExpression</code>, <code>PlaceholderExpression</code>, etc.)
+    to parse and interpret the template. As long as we're referencing our own classes,
+    we won't have that naming collision or confusion about <code>Interpret(...)</code> not existing.
+</p>
+
+<hr>
+<p>
+    <em>
+        In simple terms: we have a string with “blanks” (<code>{{PropertyName}}</code>),
+        and we fill those blanks using data from a model class. The code that does the
+        “filling in” is built around a simple “Interpreter” design pattern, where each
+        piece of text (literal or placeholder) is an “expression,” and the final result
+        is produced by asking all expressions to <strong>Interpret</strong> themselves
+        given the model.
+    </em>
+</p>

@@ -1,0 +1,67 @@
+﻿@{
+    ViewBag.Title = "Create Email Template";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // if you use a shared layout
+}
+
+<div class="container my-5">
+    <h1>Create or Edit Email Template</h1>
+    <hr />
+
+    <form asp-action="CreateTemplate" method="post">
+        <div class="mb-3">
+            <label for="templateInput" class="form-label">Template Content</label>
+            <textarea rows="5" class="form-control" id="templateInput" name="templateInput">@ViewBag.SavedTemplate</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Available Placeholders (Click to Insert)</label>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Basic Placeholders</strong></p>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (ViewBag.BasicPlaceholders != null)
+                        {
+                            foreach (var ph in ViewBag.BasicPlaceholders as List<string>)
+                            {
+                                <button type="button" class="btn btn-outline-primary placeholder-btn" data-placeholder="@ph">
+                                    @ph
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <p><strong>Advanced Formatting</strong> (Dates, Currency, etc.)</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (ViewBag.AdvancedPlaceholders != null)
+                        {
+                            foreach (var ph in ViewBag.AdvancedPlaceholders as List<string>)
+                            {
+                                <button type="button" class="btn btn-outline-secondary placeholder-btn" data-placeholder="@ph">
+                                    @ph
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Save Template</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // When the user clicks on a placeholder button, append it to the end of the textarea
+        document.querySelectorAll('.placeholder-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var placeholder = btn.getAttribute('data-placeholder');
+                var textarea = document.getElementById('templateInput');
+                        textarea.value += placeholder;
+                textarea.focus();
+                    });
+                });
+    </script>
+}

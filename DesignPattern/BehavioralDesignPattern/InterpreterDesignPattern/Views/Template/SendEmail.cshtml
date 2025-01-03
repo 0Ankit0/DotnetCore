@@ -1,0 +1,48 @@
+﻿@model EmailModel
+
+@{
+    ViewBag.Title = "Send Email";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // or your layout
+}
+
+<div class="container my-5">
+    <h1>Send Email</h1>
+    <hr />
+
+    <!--
+        Display a form for EmailModel fields
+        This data is used to fill placeholders in the template.
+    -->
+    <form asp-action="SendEmail" method="post">
+        <div class="mb-3">
+            <label class="form-label">First Name</label>
+            <input asp-for="FirstName" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Last Name</label>
+            <input asp-for="LastName" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input asp-for="Email" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Generate Email</button>
+    </form>
+
+    <hr />
+
+    <!--
+        If there's interpreted result in ViewBag, show it.
+        This is the final "email content" after the placeholders are substituted.
+    -->
+    @if (ViewBag.InterpretedResult != null)
+    {
+        <div class="alert alert-info mt-3">
+            <h5>Generated Email Content</h5>
+            <pre>@ViewBag.InterpretedResult</pre>
+        </div>
+    }
+</div>
