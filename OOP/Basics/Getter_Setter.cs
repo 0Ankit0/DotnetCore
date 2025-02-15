@@ -4,7 +4,7 @@ namespace Basics;
 
 public class Utensils
 {
-    private string? _type;
+    private string? _type = "defaultType";
     private string? _material;
     private string? _color;
 
@@ -53,6 +53,6 @@ pan.Color = "Black";
 pan.Type = "Cooking Pan"; //this will give an error because the setter is not specified
 
 Console.WriteLine($"Material: {pan.Material}"); //This will give an error because the getter is not specified
-Console.WriteLine($"Type: {pan.Type}"); //Output: Type: No Type Specified
+Console.WriteLine($"Type: {pan.Type}"); //Output: Type: defaultType
 Console.WriteLine($"Color: {pan.Color}"); //Output: Color: Black
  ****/
