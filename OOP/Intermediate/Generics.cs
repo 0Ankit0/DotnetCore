@@ -11,6 +11,10 @@ public class Generics<T>
     // }
     public T GetValue()
     {
+        if (data == null)
+        {
+            throw new InvalidOperationException("Data is null.");
+        }
         return data;
     }
     public void SetValue(T value)
