@@ -42,4 +42,15 @@ public class Subscriber
     }
 }
 
+/****
+Publisher publisher = new Publisher();
+Subscriber subscriber = new Subscriber();
+
+//First, we subscribe to the event
+subscriber.Subscribe(publisher);
+
+//Then, we raise the event with a custom message when certain conditions are fulfilled
+publisher.OnSubscribe("Hello from the Publisher!");
+ ****/
+
 
