@@ -1,4 +1,4 @@
-# The concepts that nneds to be covered to master OOP.
+# The concepts that needs to be covered to master OOP.
 
 ## **📌 Basic Level (Fundamentals of OOP in C#)**  
 🔹 **Goal:** Build a strong foundation in OOP principles and syntax.  
@@ -56,7 +56,7 @@
 - Overloading `+`, `-`, `==`, `!=`, `++`, `--`, etc.  
 - Implementing `Equals()` and `GetHashCode()`.  
 
-### **6️⃣ Explicit & Implicit Conversions**  
+### **6️ Explicit & Implicit Conversions**  
 - Overloading `implicit` and `explicit` conversion operators.  
 - Understanding `Type Casting` vs. `Type Conversion`.  
 
@@ -68,6 +68,9 @@
 - Defining and applying **custom attributes**.  
 - Using `System.Reflection` to inspect metadata at runtime.  
 
+### **9️⃣ Deconstruction**  
+- using **Deconstructor** to get required data from an object.  
+- Using **Deconstructor** with typles to receive the data.  
 ---
 
 ## **📌 Advanced Level (Professional OOP Techniques & Design Patterns)**  
@@ -111,6 +114,8 @@
 - Implementing **thread-safe Singleton** pattern.  
 - Using `lock`, `Monitor`, `volatile`, and `Interlocked`.  
 
+### **9️⃣ Records**  
+- Immutable reference types, record keyword, value-based equality  
 ---
 
 ## **📌 Design Patterns (Best Practices in OOP Architecture)**
