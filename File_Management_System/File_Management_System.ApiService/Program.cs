@@ -1,3 +1,8 @@
+using Scalar.AspNetCore;
+using File_Management_System.ApiService.Models;
+using File_Management_System.ApiService.Config;
+using File_Management_System.ApiService.Endpoints;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
@@ -5,18 +10,28 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
-
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.PropertyNamingPolicy = null; // Use PascalCase (default for C# models)
+});
+
+// Use extension methods for config
+builder.Services.AddIdentityAndDb(builder.Configuration);
+builder.Services.AddJwtAuth(builder.Configuration);
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseExceptionHandler();
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapGet("/", () => Results.Redirect("/scalar")).ExcludeFromDescription();
+    app.MapScalarApiReference();
 }
 
 string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
@@ -32,14 +47,15 @@ app.MapGet("/weatherforecast", () =>
         ))
         .ToArray();
     return forecast;
-})
-.WithName("GetWeatherForecast");
+}).WithName("GetWeatherForecast");
+
+var uploadDir = Path.Combine(app.Environment.ContentRootPath, "Uploads");
+Directory.CreateDirectory(uploadDir);
+
+// Use extension methods for endpoints
+app.MapFileEndpoints(uploadDir);
+app.MapAuthEndpoints();
 
 app.MapDefaultEndpoints();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
