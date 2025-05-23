@@ -10,4 +10,8 @@
     <ProjectReference Include="..\File_Management_System.ServiceDefaults\File_Management_System.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Radzen.Blazor" Version="7.0.6" />
+  </ItemGroup>
+
 </Project>
