@@ -9,7 +9,7 @@ public static class IdentityConfig
     public static void AddIdentityAndDb(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=FileManagementSystem;Username=postgres;Password=yourpassword"));
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=FileManagementSystem;Username=postgres;Password=admin"));
         services.AddIdentity<IdentityUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
