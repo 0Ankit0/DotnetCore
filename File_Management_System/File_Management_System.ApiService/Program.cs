@@ -2,6 +2,7 @@ using Scalar.AspNetCore;
 using File_Management_System.ApiService.Models;
 using File_Management_System.ApiService.Config;
 using File_Management_System.ApiService.Endpoints;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
 builder.Services.AddIdentityAndDb(builder.Configuration);
 builder.Services.AddJwtAuth(builder.Configuration);
 builder.Services.AddAuthorization();
+builder.Services.AddTransient<IEmailSender<IdentityUser>, NoOpEmailSender>();
 
 var app = builder.Build();
 
@@ -54,7 +56,8 @@ Directory.CreateDirectory(uploadDir);
 
 // Use extension methods for endpoints
 app.MapFileEndpoints(uploadDir);
-app.MapAuthEndpoints();
+//app.MapAuthEndpoints();
+app.MapIdentityApi<IdentityUser>();
 
 app.MapDefaultEndpoints();
 
