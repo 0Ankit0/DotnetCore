@@ -1,0 +1,82 @@
+@page "/login"
+@inject IdentityApiClient IdentityApi
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<RadzenCard class="rz-my-12 rz-mx-auto rz-p-4 rz-p-md-12" style="max-width: 600px;">
+    <EditForm Model="loginModel" OnValidSubmit="@HandleLogin" FormName="LoginForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="rz-fieldset">
+            <div class="rz-fieldset-legend">Login</div>
+            <div class="rz-fieldset-content">
+                <InputText class="rz-inputtext" style="width:100%;" @bind-Value="loginModel.UserName" placeholder="Email" />
+                <InputText class="rz-inputtext" style="width:100%;margin-top:12px;" @bind-Value="loginModel.Password" placeholder="Password" type="password" />
+                <button type="submit" class="rz-button" style="margin-top:18px;width:100%;background:#1976d2;color:white;border-radius:6px;">
+                    Login
+                </button>
+            </div>
+        </div>
+    </EditForm>
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <RadzenAlert Severity="@(success ? "Success" : "Error")" Style="margin-top:18px;border-radius:6px;">
+            @message
+        </RadzenAlert>
+    }
+    <RadzenButton Text="Logout" Click="@Logout"
+        Style="margin-top:18px;width:100%;background:#e53935;color:white;border-radius:6px;"
+        Visible="@(token != null)" />
+    <div style="margin-top:16px;text-align:center;">
+        <a href="/register" style="color:#1976d2;text-decoration:none;">Don't have an account? Register</a>
+    </div>
+</RadzenCard>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? message;
+    private string? token;
+    private bool success;
+
+    protected override Task OnInitializedAsync()
+    {
+        token = HttpContextAccessor.HttpContext?.Session.GetString("jwt");
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleLogin()
+    {
+        var (isSuccess, accessToken, error) = await IdentityApi.LoginAsync(loginModel.UserName, loginModel.Password);
+        if (isSuccess && !string.IsNullOrEmpty(accessToken))
+        {
+            token = accessToken;
+            HttpContextAccessor.HttpContext?.Session.SetString("jwt", token);
+            message = "Login successful!";
+            success = true;
+            Nav.NavigateTo("/");
+        }
+        else
+        {
+            message = "Login failed. " + (error ?? "Check your credentials.");
+            success = false;
+        }
+    }
+
+    private Task Logout()
+    {
+        HttpContextAccessor.HttpContext?.Session.Remove("jwt");
+        token = null;
+        message = "Logged out.";
+        success = true;
+        Nav.NavigateTo("/login", forceLoad: true);
+        return Task.CompletedTask;
+    }
+
+    public class LoginModel
+    {
+        public string UserName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}
