@@ -1,0 +1,71 @@
+@page "/register"
+@inject IdentityApiClient IdentityApi
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Components.Forms
+
+<RadzenCard class="rz-my-12 rz-mx-auto rz-p-4 rz-p-md-12" style="max-width: 600px;">
+    <EditForm Model="registerModel" OnValidSubmit="HandleRegister" FormName="RegisterForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="rz-fieldset">
+            <div class="rz-fieldset-legend">Register</div>
+            <div class="rz-fieldset-content">
+                <InputText class="rz-inputtext" style="width:100%;" @bind-Value="registerModel.Email" placeholder="Email" />
+                <InputText class="rz-inputtext" style="width:100%;margin-top:12px;" @bind-Value="registerModel.Password" placeholder="Password" type="password" />
+                <button type="submit" class="rz-button" style="margin-top:18px;width:100%;background:#1976d2;color:white;border-radius:6px;">
+                    Sign Up
+                </button>
+            </div>
+        </div>
+    </EditForm>
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <RadzenAlert Severity="@(success ? "Success" : "Error")" Style="margin-top:18px;border-radius:6px;">
+            @message
+        </RadzenAlert>
+    }
+    <div style="margin-top:16px;text-align:center;">
+        <a href="/login" style="color:#1976d2;text-decoration:none;">Already have an account? Login</a>
+    </div>
+</RadzenCard>
+
+<style>
+    .login-background {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+@code {
+    private RegisterModel registerModel = new();
+    private string? message;
+    private bool success;
+
+    private async Task HandleRegister()
+    {
+       var (isSuccess, error) = await IdentityApi.RegisterAsync(registerModel.Email, registerModel.Password);
+        if (isSuccess)
+        {
+            message = "Registration successful! Please check your email to confirm.";
+            success = true;
+            registerModel = new();
+        }
+        else
+        {
+            message = "Registration failed. " + (error ?? "Try a different email.");
+            success = false;
+        }
+    }
+
+    public class RegisterModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}
