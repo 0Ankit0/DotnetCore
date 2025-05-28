@@ -10,7 +10,10 @@ public static class IdentityConfig
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=FileManagementSystem;Username=postgres;Password=admin"));
-        services.AddIdentity<IdentityUser, IdentityRole>()
+        services.AddAuthentication()
+         .AddBearerToken(IdentityConstants.BearerScheme);
+ 
+         services.AddIdentity<IdentityUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
     }
