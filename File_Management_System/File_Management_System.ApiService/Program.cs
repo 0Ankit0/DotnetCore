@@ -60,7 +60,7 @@ Directory.CreateDirectory(uploadDir);
 // Use extension methods for endpoints
 app.MapFileEndpoints(uploadDir);
 //app.MapAuthEndpoints();
-app.MapIdentityApi<IdentityUser>();
+app.MapIdentityApiEndpoint<IdentityUser>();
 
 app.MapDefaultEndpoints();
 
