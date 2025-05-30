@@ -1,9 +1,10 @@
 using System;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Authorization;
 
-namespace File_Management_System.Web.Components;
+namespace File_Management_System.Web.Services;
 
 public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 {
@@ -16,28 +17,47 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+       
+
         ClaimsIdentity identity;
-
-        var jwt = await _protectedStorageService.GetAsync<string>("jwt");
-        if (!string.IsNullOrEmpty(jwt))
+        try
         {
-            // In a real app, parse JWT and extract claims. Here, just create a dummy identity.
-            identity = new ClaimsIdentity(new[]
+            var jwt = await _protectedStorageService.GetAsync<string>("jwt");
+            if (!string.IsNullOrEmpty(jwt))
             {
-                new Claim(ClaimTypes.Name, "User")
-            }, "jwtAuthType");
-        }
-        else
-        {
-            identity = new ClaimsIdentity();
-        }
+                // Parse JWT and extract claims
+                var claims = new List<Claim>();
+                claims.Add(new Claim(ClaimTypes.Name, "User"));
+                claims.Add(new Claim("jwt", jwt)); // Store the JWT as a claim
+                identity = new ClaimsIdentity(claims, "jwtAuthType");
+            }
+            else
+            {
+                identity = new ClaimsIdentity();
+            }
 
-        var user = new ClaimsPrincipal(identity);
-        return new AuthenticationState(user);
+            var user = new ClaimsPrincipal(identity);
+            return new AuthenticationState(user);
+        }catch(Exception ex){
+            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+
+        }
     }
 
     public void NotifyAuthenticationStateChanged()
     {
+        NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+    }
+
+    public void NotifyUserAuthentication(string jwt)
+    {
+        // Optionally, you could parse the JWT and extract claims here
+        NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+    }
+
+    public void NotifyUserLogout()
+    {
+        // Notify all consumers that the user is now logged out (identity will be empty)
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
     }
 }

@@ -1,7 +1,5 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text;
 using System.Web;
 
 namespace File_Management_System.Web;
@@ -25,16 +23,24 @@ public class IdentityApiClient(HttpClient httpClient)
     // 2. POST /login
     public async Task<(bool Success, string? AccessToken, string? Error)> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
     {
-        var payload = new { Email = email, Password = password };
+        // The endpoint expects: LoginRequest (Email, Password, TwoFactorCode, TwoFactorRecoveryCode)
+        var payload = new
+        {
+            Email = email,
+            Password = password,
+            TwoFactorCode = (string?)null,
+            TwoFactorRecoveryCode = (string?)null
+        };
         var response = await httpClient.PostAsJsonAsync("/login", payload, cancellationToken);
         IsUnauthorized = response.StatusCode == HttpStatusCode.Unauthorized;
         if (response.IsSuccessStatusCode)
         {
+            // The endpoint returns Ok<AccessTokenResponse> with accessToken property
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
             try
             {
                 using var doc = JsonDocument.Parse(json);
-                if (doc.RootElement.TryGetProperty("accessToken", out var tokenProp))
+                if (doc.RootElement.TryGetProperty("AccessToken", out var tokenProp))
                     return (true, tokenProp.GetString(), null);
             }
             catch (JsonException) { }

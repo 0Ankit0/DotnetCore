@@ -1,10 +1,16 @@
+
 using File_Management_System.Web;
 using File_Management_System.Web.Components;
+using File_Management_System.Web.Services;
+using Microsoft.AspNetCore.Components.Authorization;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
+
+builder.Services.AddRadzenComponents();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -12,12 +18,26 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IProtectedStorageService,ProtectedStorageService>();
+builder.Services.AddScoped<AuthenticationStateProvider,CustomAuthenticationStateProvider>();
+builder.Services.AddCascadingAuthenticationState();
+
+// Register HttpClient with AuthTokenHandler
+builder.Services.AddHttpClient<FileApiClient>(client =>
+{
+    client.BaseAddress = new("https+http://apiservice");
+});
+
 builder.Services.AddHttpClient<WeatherApiClient>(client =>
-    {
-        // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
-        // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
-        client.BaseAddress = new("https+http://apiservice");
-    });
+{
+    client.BaseAddress = new("https+http://apiservice");
+});
+
+builder.Services.AddHttpClient<IdentityApiClient>(client =>
+{
+    client.BaseAddress = new("https+http://apiservice");
+});
 
 var app = builder.Build();
 
@@ -33,6 +53,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.UseOutputCache();
+
 
 app.MapStaticAssets();
 

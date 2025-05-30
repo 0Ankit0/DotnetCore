@@ -1,4 +1,9 @@
-﻿@inherits LayoutComponentBase
+﻿@using File_Management_System.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inherits LayoutComponentBase
+@inject IProtectedStorageService ProtectedStorage
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="page">
     <div class="sidebar">
@@ -8,6 +13,15 @@
     <main>
         <div class="top-row px-4">
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <span style="margin-left:20px"></span>
+            @if (isLoggedIn)
+            {
+                <RadzenLink Text="Logout" Path="#" Click="@OnLogoutClicked" Style="margin-right:10px;" />
+            }
+            else
+            {
+                <RadzenLink Text="Login" Path="/login" Click="@OnLoginClicked" Style="margin-right:10px;" />
+            }
         </div>
 
         <article class="content px-4">
@@ -21,3 +35,60 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+    private bool isLoggedIn;
+    private bool _initialized;
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialized)
+        {
+            await UpdateLoginStateAsync();
+            _initialized = true;
+            StateHasChanged();
+        }
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        await UpdateLoginStateAsync();
+        StateHasChanged();
+    }
+
+    private async Task UpdateLoginStateAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        isLoggedIn = authState.User.Identity?.IsAuthenticated ?? false;
+    }
+
+    private async Task OnLogoutClicked()
+    {
+        await ProtectedStorage.RemoveAsync("jwt");
+        isLoggedIn = false;
+        // Notify the authentication state provider
+        if (AuthenticationStateProvider is CustomAuthenticationStateProvider customProvider)
+        {
+            customProvider.NotifyUserLogout();
+        }
+        Nav.NavigateTo("/login", forceLoad: true);
+        StateHasChanged();
+    }
+
+    private void OnLoginClicked()
+    {
+        Nav.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}

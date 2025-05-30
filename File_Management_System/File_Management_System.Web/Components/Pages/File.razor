@@ -1,0 +1,133 @@
+﻿@page "/files"
+@using Radzen
+@using Radzen.Blazor
+@inject FileApiClient FileApi
+
+<RadzenCard Style="max-width:700px;margin:auto;margin-top:40px;">
+    <h3>File Manager</h3>
+    <RadzenUpload ChooseText="Select file" Change="@OnFileSelectedAsync" Style="margin-bottom:10px;" />
+    <RadzenButton Text="Upload" Click="@StartUpload" Disabled="@(!canUpload)" Style="margin-bottom:10px;" />
+    @if (uploading)
+    {
+        <RadzenProgressBar Value="@progress" Max="100" ShowValue="true" Style="width:100%;margin-bottom:10px;" />
+        <RadzenButton Text="Cancel Upload" Click="@CancelUpload" ButtonStyle="ButtonStyle.Danger" />
+    }
+    @if (!string.IsNullOrEmpty(uploadMessage))
+    {
+        <RadzenAlert Severity="Info" Style="margin-top:10px;">@uploadMessage</RadzenAlert>
+    }
+    <Radzen.Blazor.RadzenDivider />
+    <h4>Files</h4>
+    @if (files == null)
+    {
+        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" Style="width:100%;" />
+    }
+    else if (files.Length == 0)
+    {
+        <RadzenAlert Severity="Info">No files found.</RadzenAlert>
+    }
+    else
+    {
+        <RadzenDataList Data="@files" TItem="string" Style="width:100%;">
+            <Template Context="file">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>@file</span>
+                    <span>
+                        <RadzenButton Icon="download" Text="Download" Click="@(() => DownloadFile(file))" Style="margin-right:5px;" />
+                        <RadzenButton Icon="delete" Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                            Click="@(() => DeleteFile(file))" />
+                    </span>
+                </div>
+            </Template>
+        </RadzenDataList>
+    }
+</RadzenCard>
+
+@code {
+    private string[]? files;
+    private IBrowserFile? selectedFile;
+    private bool canUpload => selectedFile != null && !uploading;
+    private bool uploading = false;
+    private int progress = 0;
+    private string? uploadMessage;
+    private CancellationTokenSource? uploadCts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFiles();
+    }
+
+    private async Task LoadFiles()
+    {
+        files = await FileApi.ListFilesAsync();
+        StateHasChanged();
+    }
+
+    private async Task OnFileSelectedAsync(UploadChangeEventArgs args)
+    {
+        selectedFile = args.Files?.FirstOrDefault();
+        uploadMessage = null;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private async Task StartUpload()
+    {
+        if (selectedFile == null)
+            return;
+
+        uploading = true;
+        progress = 0;
+        uploadMessage = null;
+        uploadCts = new CancellationTokenSource();
+
+        try
+        {
+            var success = await FileApi.UploadFileAsync(selectedFile, uploadCts.Token);
+            if (success)
+            {
+                uploadMessage = "Upload complete!";
+                await LoadFiles();
+            }
+            else if (uploadCts.IsCancellationRequested)
+            {
+                uploadMessage = "Upload canceled.";
+            }
+            else
+            {
+                uploadMessage = $"Upload failed.";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            uploadMessage = "Upload canceled.";
+        }
+        finally
+        {
+            uploading = false;
+            progress = 0;
+            selectedFile = null;
+            StateHasChanged();
+        }
+    }
+
+    private void CancelUpload()
+    {
+        uploadCts?.Cancel();
+    }
+
+    private async Task DeleteFile(string fileName)
+    {
+        var success = await FileApi.DeleteFileAsync(fileName);
+        if (success)
+        {
+            await LoadFiles();
+        }
+    }
+
+    private Task DownloadFile(string fileName)
+    {
+        // Implement download logic if needed
+        return Task.CompletedTask;
+    }
+}
